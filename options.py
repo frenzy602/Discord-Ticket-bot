@@ -8,7 +8,7 @@ from datetime import datetime
 import pytz  # Make sure to install pytz if you haven't already
 
 # Hardcoded bot token (replace with your actual token)
-BOT_TOKEN = "MTMzODQyNTUwNTMyMTU4NjczOQ.GTLhr5.zjGK-zKRynQ_vw6YpbZzF4EEvJrap7DiXK8mbE"  # Replace with your actual bot token
+BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"  # Replace with your actual bot token
 
 # Dictionary to store ticket categories
 OptionsDict = {
