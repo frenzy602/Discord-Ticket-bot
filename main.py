@@ -8,7 +8,7 @@ from datetime import datetime
 import pytz  # Make sure to install pytz if you haven't already
 
 # Hardcoded bot token (replace with your actual token)
-BOT_TOKEN = "YOUR_TOKEN_HERE"  # Replace with your actual bot token
+BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"  # Replace with your actual bot token
 
 # Dictionary to store ticket categories
 OptionsDict = {
@@ -40,25 +40,16 @@ def get_ticket_category(guild):
 def get_ticket_panel_channel(guild):
     return guild.get_channel(TICKET_PANEL_CHANNEL_ID)
 
-# Validate user input
-def validate_input(input_text, max_length=1000):
-    if not input_text or len(input_text) > max_length:
-        return False
-    return True
-
 @bot.event
 async def on_ready():
     # Register persistent views
     bot.add_view(TicketPanel())
-    bot.add_view(TicketCloseView())
-    bot.add_view(TicketControlView())
     print(f"{bot.user} is now online!")
 
 class PurchaseFormModal(discord.ui.Modal, title="Purchase Form"):
     def __init__(self):
         super().__init__()
 
-        # Field for "Do You Agree With Our ToS?"
         self.tos_agreement = discord.ui.TextInput(
             label="Do You Agree With Our ToS?",
             style=discord.TextStyle.short,
@@ -68,7 +59,6 @@ class PurchaseFormModal(discord.ui.Modal, title="Purchase Form"):
         )
         self.add_item(self.tos_agreement)
 
-        # Field for "What Product Are You Purchasing?"
         self.product = discord.ui.TextInput(
             label="What Product Are You Purchasing?",
             style=discord.TextStyle.short,
@@ -78,7 +68,6 @@ class PurchaseFormModal(discord.ui.Modal, title="Purchase Form"):
         )
         self.add_item(self.product)
 
-        # Field for "Quantity Of The Product"
         self.quantity = discord.ui.TextInput(
             label="Quantity Of The Product",
             style=discord.TextStyle.short,
@@ -88,7 +77,6 @@ class PurchaseFormModal(discord.ui.Modal, title="Purchase Form"):
         )
         self.add_item(self.quantity)
 
-        # Field for "Payment Mode?"
         self.payment_method = discord.ui.TextInput(
             label="Payment Mode?",
             style=discord.TextStyle.short,
@@ -106,9 +94,8 @@ class PurchaseFormModal(discord.ui.Modal, title="Purchase Form"):
             await interaction.response.send_message(f"Category `{TICKET_CATEGORY_NAME}` not found. Please create it.", ephemeral=True)
             return
 
-        # Check if the user already has an open ticket
         for channel in guild.text_channels:
-            if channel.topic and f":User             {interaction.user.id}" in channel.topic:
+            if channel.topic and f":User                      {interaction.user.id}" in channel.topic:
                 await interaction.response.send_message(f"You already have an open ticket: {channel.mention}", ephemeral=True)
                 return
 
@@ -134,30 +121,28 @@ class PurchaseFormModal(discord.ui.Modal, title="Purchase Form"):
             category=ticket_category,
             overwrites=overwrites,
             position=ticket_panel_channel.position + 1,
-            topic=f":User             {interaction.user.id}"
+            topic=f":User                      {interaction.user.id}\n"
+                   f"Product: {self.product.value}, Quantity: {self.quantity.value}, Payment: {self.payment_method.value}, TOS: {self.tos_agreement.value}"
         )
 
-        # Send a separate message with the purchase details
         initial_embed = discord.Embed(
             title="Purchase Ticket Details",
             description=f"<:dd:1338269535748358144> Thank you {interaction.user.mention} for your purchase inquiry!\n\n"
                         f"<:dd:1338269535748358144> Our staff is currently reviewing your request and working diligently to provide you with the best assistance.",
-            color=int('9d00ff', 16)  # Dark purple color
+            color=int('9d00ff', 16)
         )
         initial_embed.set_footer(text="Thank you for your patience")
         initial_embed.set_thumbnail(url=interaction.user.display_avatar.url)
 
         await ticket_channel.send(embed=initial_embed, view=TicketCloseView())
 
-        # Tag the support role
         support_role = guild.get_role(SUPPORT_ROLE_ID)
         if support_role:
             await ticket_channel.send(f"{support_role.mention}.")
 
-        # Second message: Purchase details in an embed with dark purple color
         purchase_details_embed = discord.Embed(
             title="Purchase Details",
-            color=int('9d00ff', 16)  # Dark purple color
+            color=int('9d00ff', 16)
         )
         purchase_details_embed.add_field(name="Do you agree with our TOS?", value=f"```{self.tos_agreement.value}```", inline=False)
         purchase_details_embed.add_field(name="What product are you purchasing?", value=f"```{self.product.value}```", inline=False)
@@ -166,7 +151,6 @@ class PurchaseFormModal(discord.ui.Modal, title="Purchase Form"):
 
         await ticket_channel.send(embed=purchase_details_embed)
 
-        # Notify the user that the ticket has been created with an embed
         ticket_created_embed = discord.Embed(
             title="Ticket Created",
             description=f"Your ticket has been created in {ticket_channel.mention}",
@@ -181,7 +165,6 @@ class SupportFormModal(discord.ui.Modal, title="Support Form"):
     def __init__(self):
         super().__init__()
 
-        # Field for "What do you need help with?"
         self.help_description = discord.ui.TextInput(
             label="What do you need help with?",
             style=discord.TextStyle.short,
@@ -199,9 +182,8 @@ class SupportFormModal(discord.ui.Modal, title="Support Form"):
             await interaction.response.send_message(f"Category `{TICKET_CATEGORY_NAME}` not found. Please create it.", ephemeral=True)
             return
 
-        # Check if the user already has an open ticket
         for channel in guild.text_channels:
-            if channel.topic and f":User             {interaction.user.id}" in channel.topic:
+            if channel.topic and f":User                      {interaction.user.id}" in channel.topic:
                 await interaction.response.send_message(f"You already have an open ticket: {channel.mention}", ephemeral=True)
                 return
 
@@ -227,36 +209,33 @@ class SupportFormModal(discord.ui.Modal, title="Support Form"):
             category=ticket_category,
             overwrites=overwrites,
             position=ticket_panel_channel.position + 1,
-            topic=f":User             {interaction.user.id}"
+            topic=f":User                      {interaction.user.id}\n"
+                   f"Help Description: {self.help_description.value}"
         )
 
-        # Send a separate message with the support details
         initial_embed = discord.Embed(
             title="Support Ticket Details",
             description=f"<:dd:1338269535748358144> Thank you {interaction.user.mention} for your support inquiry!\n\n"
                         f"<:dd:1338269535748358144> Our staff is currently reviewing your request and working diligently to provide you with the best assistance.",
-            color=int('9d00ff', 16)  # Dark purple color
+            color=int('9d00ff', 16)
         )
         initial_embed.set_footer(text="Thank you for your patience")
         initial_embed.set_thumbnail(url=interaction.user.display_avatar.url)
 
         await ticket_channel.send(embed=initial_embed, view=TicketCloseView())
 
-        # Tag the support role
         support_role = guild.get_role(SUPPORT_ROLE_ID)
         if support_role:
             await ticket_channel.send(f"{support_role.mention} A new support ticket has been created by {interaction.user.mention}.")
 
-        # Second message: Support details in an embed with dark purple color
         support_details_embed = discord.Embed(
             title="Support Details",
-            color=int('9d00ff', 16)  # Dark purple color
+            color=int('9d00ff', 16)
         )
         support_details_embed.add_field(name="What do you need help with?", value=f"**{self.help_description.value}**", inline=False)
 
         await ticket_channel.send(embed=support_details_embed)
 
-        # Notify the user that the ticket has been created with an embed
         ticket_created_embed = discord.Embed(
             title="Ticket Created",
             description=f"Your ticket has been created in {ticket_channel.mention}",
@@ -271,7 +250,6 @@ class ProductIssueFormModal(discord.ui.Modal, title="Product Issue Form"):
     def __init__(self):
         super().__init__()
 
-        # Field for "What do you need help with?"
         self.issue_description = discord.ui.TextInput(
             label="What do you need help with?",
             style=discord.TextStyle.short,
@@ -281,7 +259,6 @@ class ProductIssueFormModal(discord.ui.Modal, title="Product Issue Form"):
         )
         self.add_item(self.issue_description)
 
-        # Field for "Buying date"
         self.buying_date = discord.ui.TextInput(
             label="Buying date",
             style=discord.TextStyle.short,
@@ -299,9 +276,8 @@ class ProductIssueFormModal(discord.ui.Modal, title="Product Issue Form"):
             await interaction.response.send_message(f"Category `{TICKET_CATEGORY_NAME}` not found. Please create it.", ephemeral=True)
             return
 
-        # Check if the user already has an open ticket
         for channel in guild.text_channels:
-            if channel.topic and f":User             {interaction.user.id}" in channel.topic:
+            if channel.topic and f":User                      {interaction.user.id}" in channel.topic:
                 await interaction.response.send_message(f"You already have an open ticket: {channel.mention}", ephemeral=True)
                 return
 
@@ -327,37 +303,34 @@ class ProductIssueFormModal(discord.ui.Modal, title="Product Issue Form"):
             category=ticket_category,
             overwrites=overwrites,
             position=ticket_panel_channel.position + 1,
-            topic=f":User             {interaction.user.id}"
+            topic=f":User                      {interaction.user.id}\n"
+                   f"Issue Description: {self.issue_description.value}, Buying Date: {self.buying_date.value}"
         )
 
-        # Send a separate message with the product issue details
         initial_embed = discord.Embed(
             title="Product Issue Ticket Details",
             description=f"<:dd:1338269535748358144> Thank you {interaction.user.mention} for your product issue inquiry!\n\n"
                         f"<:dd:1338269535748358144> Our staff is currently reviewing your request and working diligently to provide you with the best assistance.",
-            color=int('9d00ff', 16)  # Dark purple color
+            color=int('9d00ff', 16)
         )
         initial_embed.set_footer(text="Thank you for your patience")
         initial_embed.set_thumbnail(url=interaction.user.display_avatar.url)
 
         await ticket_channel.send(embed=initial_embed, view=TicketCloseView())
 
-        # Tag the support role
         support_role = guild.get_role(SUPPORT_ROLE_ID)
         if support_role:
             await ticket_channel.send(f"{support_role.mention} A new product issue ticket has been created by {interaction.user.mention}.")
 
-        # Second message: Product issue details in an embed with dark purple color
         product_issue_details_embed = discord.Embed(
             title="Product Issue Details",
-            color=int('9d00ff', 16)  # Dark purple color
+            color=int('9d00ff', 16)
         )
         product_issue_details_embed.add_field(name="What do you need help with?", value=f"**{self.issue_description.value}**", inline=False)
         product_issue_details_embed.add_field(name="Buying date", value=f"**{self.buying_date.value}**", inline=False)
 
         await ticket_channel.send(embed=product_issue_details_embed)
 
-        # Notify the user that the ticket has been created with an embed
         ticket_created_embed = discord.Embed(
             title="Ticket Created",
             description=f"Your ticket has been created in {ticket_channel.mention}",
@@ -383,34 +356,28 @@ class TicketDropdown(Select):
         super().__init__(placeholder="Select a category...", options=options, custom_id="ticket_dropdown")
 
     async def callback(self, interaction: discord.Interaction):
-        selected_option = self.values[0]  # Get the selected option
-        print(f"Selected option: {selected_option}")  # Debugging
+        selected_option = self.values[0]
 
         if selected_option == "Purchase":
-            print("Purchase option selected")  # Debugging
             await interaction.response.send_modal(PurchaseFormModal())
         elif selected_option == "Support":
-            print("Support option selected")  # Debugging
             await interaction.response.send_modal(SupportFormModal())
         elif selected_option == "Product Issue":
-            print("Product Issue option selected")  # Debugging
             await interaction.response.send_modal(ProductIssueFormModal())
 
-        # Reset the dropdown after selection
         await interaction.message.edit(view=TicketPanel())
 
 class TicketCloseView(View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="Close Ticket", style=discord.ButtonStyle.secondary, emoji="🔒", custom_id="close_ticket")
+    @discord.ui.button(label="Close Ticket", style=discord.ButtonStyle.secondary, emoji="🔒", custom_id="close_ticket_button")
     async def close_ticket(self, interaction: discord.Interaction, button: Button):
         await interaction.response.defer(ephemeral=True)
 
         channel = interaction.channel
         guild = interaction.guild
 
-        # Save transcript
         transcript_category = discord.utils.get(guild.categories, name="ticket-transcripts")
         if not transcript_category:
             transcript_category = await guild.create_category("ticket-transcripts")
@@ -429,30 +396,42 @@ class TicketCloseView(View):
             await interaction.followup.send("No messages found in this ticket.", ephemeral=True)
             return
 
+        # Extracting form responses from the channel topic
+        channel_topic = channel.topic
+        form_responses = channel_topic.split("\n")[1:] if channel_topic else []
+        form_responses_text = "\n".join(form_responses)
+
         transcript_file = io.StringIO(transcript)
         transcript_file.seek(0)
         transcript_file = discord.File(fp=transcript_file, filename=f"transcript-{channel.name}.txt")
 
-        channel_topic = channel.topic
         opener_username = "Unknown"
-        if channel_topic and ':User             ' in channel_topic:
-            user_id = channel_topic.split(':User             ')[-1].strip()
-            try:
-                ticket_opener = await bot.fetch_user(int(user_id))
-                opener_username = ticket_opener.name
-            except (ValueError, IndexError):
-                print(f"Could not parse user ID from topic: {channel_topic}")
+        ticket_opener = None
 
-        closer_username = interaction.user.name
+        # Improved user ID parsing
+        if channel_topic and ':User  ' in channel_topic:
+            try:
+                user_id_str = channel_topic.split(':User  ')[1].strip().split()[0]  # Get the user ID after ':User  '
+                user_id = int(user_id_str)
+                ticket_opener = await bot.fetch_user(user_id)
+                opener_username = ticket_opener.name
+            except (ValueError, IndexError) as e:
+                print(f"Could not parse user ID from topic: {channel_topic} - Error: {e}")
+
+        closer_username = interaction.user.mention
 
         ist_timezone = pytz.timezone('Asia/Kolkata')
         current_time_ist = datetime.now(ist_timezone).strftime("%Y-%m-%d %H:%M:%S")
 
+        category = channel.name.split('-')[0]
+
         embed = discord.Embed(
             title=f"Transcript for {channel.name}",
-            description=f"**Ticket Closed By:** {closer_username}\n"
+            description=f"**Category:** {category}\n"
+                        f"**Ticket Closed By:** {closer_username}\n"
                         f"**Ticket Opener:** {opener_username}\n"
-                        f"**Date and Time (IST):** {current_time_ist}",
+                        f"**Date and Time (IST):** {current_time_ist}\n"
+                        f"**Form Responses:**\n{form_responses_text}",
             color=discord.Color.green()
         )
 
@@ -465,10 +444,11 @@ class TicketCloseView(View):
                     description=f"Your ticket has been closed in **{guild.name}**.",
                     color=discord.Color.blue()
                 )
-                dm_embed.add_field(name="Ticket Information", value=f"Category: {channel.name.split('-')[0]}\nClaimed by: Not claimed\nTotal Messages: {len(messages)}", inline=False)
+                dm_embed.add_field(name="Ticket Information", value=f"Category: {category}\nClaimed by: Not claimed\nTotal Messages: {len(messages)}", inline=False)
                 dm_embed.add_field(name="Transcript", value=f"**Ticket Closed By:** {closer_username}\n"
                                                             f"**Ticket Opener:** {opener_username}\n"
-                                                            f"**Date and Time (IST):** {current_time_ist}", inline=False)
+                                                            f"**Date and Time (IST):** {current_time_ist}\n"
+                                                            f"**Form Responses:**\n{form_responses_text}", inline=False)
 
                 await ticket_opener.send(
                     content=f"Your ticket transcript from {guild.name}:",
@@ -477,52 +457,61 @@ class TicketCloseView(View):
                 )
         except discord.Forbidden:
             print(f"Could not DM user {ticket_opener.id} - DMs disabled")
+            await interaction.followup.send("I couldn't send you the transcript because your DMs are disabled.", ephemeral=True)
         except Exception as e:
             print(f"Error sending DM: {e}")
+            await interaction.followup.send("An error occurred while trying to send you the transcript.", ephemeral=True)
 
-        # Remove the user from the ticket channel
         if ticket_opener:
             await channel.set_permissions(ticket_opener, read_messages=False, send_messages=False)
 
-        # Send a message with buttons for transcript, open, and delete
+        control_view = TicketControlView(channel.id)
         control_embed = discord.Embed(
             title="Ticket Closed",
-            description=f"Ticket closed by {closer_username}.\n\nUse the buttons below to manage the ticket.",
+            description=f"Ticket closed by {closer_username}.",
             color=discord.Color.orange()
         )
-        control_view = TicketControlView()
         await channel.send(embed=control_embed, view=control_view)
-
-        # Send a separate message with the ticket closed information
-        ticket_closed_message = await channel.send(f"Ticket closed by {interaction.user.mention}")
-        await ticket_closed_message.add_reaction("📝")  # Transcript
-        await ticket_closed_message.add_reaction("🔓")  # Open
-        await ticket_closed_message.add_reaction("⛔")  # Delete
 
         await interaction.followup.send("Ticket has been closed. User removed from the ticket.", ephemeral=True)
 
 class TicketControlView(View):
-    def __init__(self):
+    def __init__(self, ticket_channel_id: int):
         super().__init__(timeout=None)
 
-        # Add buttons in a single row with unique custom_id values
-        self.add_item(Button(style=discord.ButtonStyle.secondary, label="Transcript", emoji="📝", custom_id="view_transcript_button"))
-        self.add_item(Button(style=discord.ButtonStyle.secondary, label="Open", emoji="🔓", custom_id="reopen_ticket_button"))
-        self.add_item(Button(style=discord.ButtonStyle.secondary, label="Delete", emoji="⛔", custom_id="delete_ticket_button"))
+        self.ticket_channel_id = ticket_channel_id
+
+        # Add buttons for managing the ticket
+        self.add_item(Button(
+            style=discord.ButtonStyle.secondary,
+            label="Transcript",
+            emoji="📝",
+            custom_id=f"view_transcript_{ticket_channel_id}"
+        ))
+        self.add_item(Button(
+            style=discord.ButtonStyle.secondary,
+            label="Open",
+            emoji="🔓",
+            custom_id=f"reopen_ticket_{ticket_channel_id}"
+        ))
+        self.add_item(Button(
+            style=discord.ButtonStyle.secondary,
+            label="Delete",
+            emoji="⛔",
+            custom_id=f"delete_ticket_{ticket_channel_id}"
+        ))
 
     @discord.ui.button(label="Transcript", style=discord.ButtonStyle.secondary, emoji="📝", custom_id="view_transcript_button")
     async def view_transcript(self, interaction: discord.Interaction, button: Button):
         await interaction.response.defer(ephemeral=True)
-        # Logic to send the transcript to the user
         await interaction.followup.send("Transcript sent to your DMs.", ephemeral=True)
 
     @discord.ui.button(label="Open", style=discord.ButtonStyle.secondary, emoji="🔓", custom_id="reopen_ticket_button")
     async def reopen_ticket(self, interaction: discord.Interaction, button: Button):
         await interaction.response.defer(ephemeral=True)
         channel = interaction.channel
-        guild = interaction.guild
 
-        ticket_category = get_ticket_category(guild)
+        ticket_category = get_ticket_category(interaction.guild)
         if not ticket_category:
             await interaction.followup.send("Ticket category not found. Please create it.", ephemeral=True)
             return
